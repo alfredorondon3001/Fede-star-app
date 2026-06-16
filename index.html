@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0a1e">
+<title>⭐ Federico's Stars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#FFD93D;--gold-glow:rgba(255,217,61,0.3);
+  --pink:#FF6B9D;--teal:#4ECDC4;--purple:#7C3AED;
+  --bg:#0f0a1e;--bg2:#1a1035;--bg3:rgba(255,255,255,0.05);
+  --white:#fff;
+  --slot:clamp(48px,12vw,70px);
+}
+html{height:100%;background:var(--bg)}
+body{font-family:'Nunito',sans-serif;color:var(--white);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding-bottom:3rem;overflow-x:hidden}
+
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── header ── */
+.hdr{position:relative;z-index:1;text-align:center;padding:2rem 1rem 0.5rem;width:100%}
+.hdr-name{font-size:clamp(2.2rem,9vw,3.5rem);font-weight:900;color:var(--gold);
+  text-shadow:0 0 30px var(--gold-glow);line-height:1;letter-spacing:-1px}
+.hdr-sub{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.35);
+  letter-spacing:0.14em;text-transform:uppercase;margin-top:4px}
+
+/* ── big star count ── */
+.total-wrap{position:relative;z-index:1;margin:1rem 0 0;text-align:center}
+.total-num{font-size:clamp(5rem,22vw,9rem);font-weight:900;line-height:1;
+  color:var(--white);text-shadow:0 0 40px rgba(255,255,255,0.08)}
+.total-icon{font-size:clamp(2rem,8vw,3.5rem);vertical-align:middle;margin-left:4px}
+.total-label{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.35);
+  letter-spacing:0.12em;text-transform:uppercase;margin-top:2px}
+
+/* ── redeem button ── */
+.redeem-btn{position:relative;z-index:1;margin:1.5rem auto 0;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:clamp(200px,65vw,280px);padding:1rem 1.5rem;
+  border-radius:999px;border:none;
+  background:var(--pink);color:var(--white);
+  font-family:'Nunito',sans-serif;font-size:clamp(1rem,4vw,1.2rem);font-weight:900;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 4px 24px rgba(255,107,157,0.4);
+  animation:pulse-btn 2.2s ease-in-out infinite;
+  transition:transform 0.12s ease}
+.redeem-btn:active{transform:scale(0.93);animation:none}
+.redeem-btn:disabled{background:rgba(255,255,255,0.1);box-shadow:none;
+  animation:none;color:rgba(255,255,255,0.3);cursor:default}
+@keyframes pulse-btn{
+  0%,100%{box-shadow:0 4px 24px rgba(255,107,157,0.4),0 0 0 0 rgba(255,107,157,0.3)}
+  50%{box-shadow:0 4px 32px rgba(255,107,157,0.6),0 0 0 10px rgba(255,107,157,0)}
+}
+
+/* ── star grid ── */
+.grid-wrap{position:relative;z-index:1;width:100%;max-width:420px;padding:1.25rem 1rem 0}
+.grid-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.1em;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:10px}
+.grid{display:flex;flex-wrap:wrap;gap:clamp(5px,1.5vw,10px);justify-content:center}
+.slot{width:var(--slot);height:var(--slot)}
+.slot svg{width:100%;height:100%;filter:drop-shadow(0 0 5px rgba(255,217,61,0.5))}
+
+/* ── history ── */
+.history-wrap{position:relative;z-index:1;width:100%;max-width:420px;padding:1.5rem 1.25rem 0}
+.history-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.1em;color:rgba(255,255,255,0.3);margin-bottom:10px}
+.history-empty{font-size:0.88rem;color:rgba(255,255,255,0.25);font-weight:700;
+  text-align:center;padding:1rem 0}
+.hist-item{display:flex;align-items:center;gap:12px;padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.06)}
+.hist-item:last-child{border-bottom:none}
+.hist-badge{background:rgba(255,217,61,0.12);border:1px solid rgba(255,217,61,0.25);
+  border-radius:999px;padding:3px 10px;font-size:0.8rem;font-weight:900;
+  color:var(--gold);white-space:nowrap;flex-shrink:0}
+.hist-desc{font-size:0.88rem;font-weight:700;color:rgba(255,255,255,0.7);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-date{font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.25);
+  white-space:nowrap;flex-shrink:0}
+
+/* ── last added ── */
+.last-label{position:relative;z-index:1;text-align:center;margin-top:1rem;
+  font-size:0.75rem;color:rgba(255,255,255,0.25);font-weight:700;min-height:1em}
+
+/* ── refresh ── */
+.refresh-btn{position:relative;z-index:1;margin:1.25rem auto 0;display:block;
+  padding:0.55rem 1.3rem;border-radius:999px;
+  border:1px solid rgba(255,255,255,0.12);background:transparent;
+  color:rgba(255,255,255,0.35);font-family:'Nunito',sans-serif;
+  font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.2s}
+.refresh-btn:hover{border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.6)}
+
+/* ── error ── */
+#err{display:none;position:relative;z-index:1;margin:1rem auto;max-width:340px;
+  padding:0.8rem 1rem;border-radius:12px;
+  background:rgba(255,100,100,0.1);border:1px solid rgba(255,100,100,0.25);
+  color:#ff8a8a;font-size:0.85rem;font-weight:700;text-align:center}
+
+/* ── cog ── */
+.cog{position:fixed;top:1rem;right:1rem;z-index:60;width:38px;height:38px;
+  border-radius:50%;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);
+  font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* ── redeem modal ── */
+#redeemModal{display:none;position:fixed;inset:0;z-index:90;
+  background:rgba(15,10,30,0.97);flex-direction:column;
+  align-items:center;justify-content:center;padding:2rem;gap:1rem;text-align:center}
+#redeemModal.open{display:flex}
+.modal-title{font-size:1.5rem;font-weight:900;color:var(--gold)}
+.modal-sub{font-size:0.9rem;color:rgba(255,255,255,0.45);font-weight:700;max-width:280px;line-height:1.5}
+.modal-count-row{display:flex;align-items:center;gap:16px;margin:0.5rem 0}
+.modal-count-btn{width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);
+  background:transparent;color:var(--white);font-size:1.4rem;font-weight:900;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:border-color 0.15s}
+.modal-count-btn:hover{border-color:rgba(255,255,255,0.5)}
+.modal-count-btn:disabled{opacity:0.25;cursor:default}
+.modal-num{font-size:3rem;font-weight:900;color:var(--gold);min-width:60px}
+.modal-desc-label{font-size:0.78rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.1em;color:rgba(255,255,255,0.35);align-self:flex-start;
+  width:100%;max-width:300px;text-align:left}
+.modal-desc{width:100%;max-width:300px;padding:0.75rem 1rem;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);
+  color:var(--white);font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;
+  text-align:left}
+.modal-desc::placeholder{color:rgba(255,255,255,0.25)}
+.modal-desc:focus{outline:none;border-color:var(--gold)}
+.modal-confirm{width:100%;max-width:300px;padding:0.9rem;border-radius:999px;
+  border:none;background:var(--pink);color:var(--white);
+  font-family:'Nunito',sans-serif;font-size:1.05rem;font-weight:900;cursor:pointer}
+.modal-cancel{background:none;border:none;color:rgba(255,255,255,0.3);
+  font-family:'Nunito',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;
+  padding:0.4rem}
+
+/* ── settings panel ── */
+#panel{display:none;position:fixed;inset:0;z-index:100;background:rgba(15,10,30,0.98);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;gap:0.9rem;overflow-y:auto}
+#panel.open{display:flex}
+.panel-title{font-size:1.4rem;font-weight:900;color:var(--gold);margin-bottom:0.25rem}
+.panel-lbl{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+  color:rgba(255,255,255,0.4);align-self:flex-start;width:100%;max-width:320px}
+.panel-input{width:100%;max-width:320px;padding:0.7rem 1rem;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);
+  color:var(--white);font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700}
+.panel-input:focus{outline:none;border-color:var(--gold)}
+.panel-row{display:flex;gap:10px;width:100%;max-width:320px}
+.panel-act{flex:1;padding:0.7rem;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);
+  color:var(--white);font-family:'Nunito',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer}
+.panel-act.red{border-color:rgba(255,100,100,0.3);color:#ff8a8a}
+.panel-save{width:100%;max-width:320px;padding:0.85rem;border-radius:999px;border:none;
+  background:var(--pink);color:var(--white);font-family:'Nunito',sans-serif;
+  font-size:1rem;font-weight:900;cursor:pointer;margin-top:0.25rem}
+.panel-note{font-size:0.72rem;color:rgba(255,255,255,0.25);max-width:300px;
+  text-align:center;line-height:1.5}
+.panel-close{position:absolute;top:1rem;right:1rem;background:none;border:none;
+  color:rgba(255,255,255,0.3);font-size:1.4rem;cursor:pointer;padding:0.5rem}
+
+@media(prefers-reduced-motion:reduce){.redeem-btn{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<button class="cog" id="cogBtn" aria-label="Settings">⚙️</button>
+
+<header class="hdr">
+  <div class="hdr-name" id="nameEl">Federico</div>
+  <div class="hdr-sub">Star chart</div>
+</header>
+
+<div class="total-wrap">
+  <div><span class="total-num" id="totalEl">—</span><span class="total-icon">⭐</span></div>
+  <div class="total-label">stars collected</div>
+</div>
+
+<button class="redeem-btn" id="redeemBtn" disabled>🎁 Claim a reward</button>
+
+<div class="grid-wrap">
+  <div class="grid-label">Your stars</div>
+  <div class="grid" id="gridEl"></div>
+</div>
+
+<div class="last-label" id="lastEl"></div>
+<div id="err"></div>
+
+<div class="history-wrap" id="histWrap" style="display:none">
+  <div class="history-title">Rewards claimed</div>
+  <div id="histList"></div>
+</div>
+
+<button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+
+<!-- Redeem modal -->
+<div id="redeemModal" role="dialog" aria-modal="true" aria-label="Claim a reward">
+  <div class="modal-title">🎁 Claim a reward</div>
+  <div class="modal-sub" id="modalSub">How many stars do you want to spend?</div>
+  <div class="modal-count-row">
+    <button class="modal-count-btn" id="minusBtn" aria-label="Fewer stars">−</button>
+    <div class="modal-num" id="modalNum">1</div>
+    <button class="modal-count-btn" id="plusBtn" aria-label="More stars">+</button>
+  </div>
+  <div class="modal-desc-label">What's the reward?</div>
+  <input class="modal-desc" id="modalDesc" type="text" maxlength="60" placeholder="e.g. Extra screen time, ice cream…">
+  <button class="modal-confirm" id="confirmBtn">Spend stars ⭐</button>
+  <button class="modal-cancel" id="cancelBtn">Cancel</button>
+</div>
+
+<!-- Settings panel -->
+<div id="panel" role="dialog" aria-modal="true" aria-label="Parent settings">
+  <button class="panel-close" id="panelClose">✕</button>
+  <div class="panel-title">⚙️ Settings</div>
+  <div class="panel-lbl">GitHub username</div>
+  <input class="panel-input" id="inUser" placeholder="your-username">
+  <div class="panel-lbl">Repository name</div>
+  <input class="panel-input" id="inRepo" placeholder="federico-stars">
+  <div class="panel-lbl">GitHub token (contents: read & write)</div>
+  <input class="panel-input" id="inToken" type="password" placeholder="github_pat_…">
+  <div class="panel-lbl">Child's name</div>
+  <input class="panel-input" id="inName" placeholder="Federico">
+  <div class="panel-row">
+    <button class="panel-act red" id="resetBtn">🗑 Reset stars</button>
+    <button class="panel-act" id="undoBtn">↩ Undo last</button>
+  </div>
+  <button class="panel-save" id="saveBtn">Save</button>
+  <p class="panel-note">Token stored only in this browser. Never shared.</p>
+</div>
+
+<script>
+const CFG_KEY = 'starchart_cfg';
+const DATA_FILE = 'data.json';
+
+function loadCfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch{ return {}; } }
+function saveCfg(c){ localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
+let cfg = loadCfg();
+
+// ── GitHub helpers ───────────────────────────────────────
+async function ghFetch(path, method='GET', body=null){
+  const h={
+    'Authorization':`token ${cfg.token}`,
+    'Accept':'application/vnd.github+json',
+    'X-GitHub-Api-Version':'2022-11-28'
+  };
+  if(body) h['Content-Type']='application/json';
+  const r = await fetch(
+    `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${path}`,
+    {method, headers:h, body: body?JSON.stringify(body):null}
+  );
+  if(!r.ok){ const e=await r.json(); throw new Error(e.message||r.status); }
+  return r.json();
+}
+
+async function readData(){
+  const res = await ghFetch(DATA_FILE);
+  const data = JSON.parse(atob(res.content.replace(/\n/g,'')));
+  return { data, sha: res.sha };
+}
+
+async function writeData(data, sha, msg){
+  await ghFetch(DATA_FILE,'PUT',{
+    message: msg,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),
+    sha
+  });
+}
+
+// ── render ───────────────────────────────────────────────
+const STAR_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="#FFD93D"/>
+</svg>`;
+
+function renderGrid(stars){
+  const grid = document.getElementById('gridEl');
+  grid.innerHTML = '';
+  const show = Math.min(stars, 50); // cap display at 50 visual stars
+  for(let i=0;i<show;i++){
+    const s=document.createElement('div'); s.className='slot';
+    s.innerHTML=STAR_SVG; grid.appendChild(s);
+  }
+  if(stars > 50){
+    const extra=document.createElement('div');
+    extra.style.cssText='width:100%;text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.3);font-weight:700;padding-top:6px';
+    extra.textContent=`+ ${stars-50} more`;
+    grid.appendChild(extra);
+  }
+}
+
+function fmtDate(iso){
+  if(!iso) return '';
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' · ' +
+         d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderHistory(redemptions){
+  const wrap=document.getElementById('histWrap');
+  const list=document.getElementById('histList');
+  if(!redemptions||!redemptions.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block'; list.innerHTML='';
+  [...redemptions].reverse().forEach(r=>{
+    const item=document.createElement('div'); item.className='hist-item';
+    item.innerHTML=`
+      <span class="hist-badge">−${r.cost}⭐</span>
+      <span class="hist-desc">${r.desc||'Reward'}</span>
+      <span class="hist-date">${fmtDate(r.date)}</span>`;
+    list.appendChild(item);
+  });
+}
+
+function showError(m){ const e=document.getElementById('err'); e.textContent=m; e.style.display='block'; }
+function hideError(){ document.getElementById('err').style.display='none'; }
+
+async function fetchAndRender(){
+  hideError();
+  document.getElementById('totalEl').textContent='…';
+  document.getElementById('redeemBtn').disabled=true;
+  if(!cfg.token||!cfg.user||!cfg.repo){
+    document.getElementById('totalEl').textContent='?';
+    showError('Open ⚙️ and fill in your GitHub details first.');
+    return;
+  }
+  try{
+    const {data} = await readData();
+    const stars = data.stars||0;
+    const name  = data.name ||'Federico';
+    const last  = data.lastAdded||null;
+    document.getElementById('nameEl').textContent=name;
+    document.getElementById('totalEl').textContent=stars;
+    document.getElementById('redeemBtn').disabled=(stars<1);
+    renderGrid(stars);
+    renderHistory(data.redemptions||[]);
+    document.getElementById('lastEl').textContent = last
+      ? 'Last star: '+fmtDate(last) : '';
+  }catch(e){ showError('Could not load: '+e.message); }
+}
+
+// ── redeem modal ─────────────────────────────────────────
+let modalCount = 1;
+let maxStars = 1;
+
+function setModalCount(n){
+  modalCount = Math.max(1, Math.min(n, maxStars));
+  document.getElementById('modalNum').textContent = modalCount;
+  document.getElementById('minusBtn').disabled = modalCount<=1;
+  document.getElementById('plusBtn').disabled  = modalCount>=maxStars;
+}
+
+document.getElementById('redeemBtn').addEventListener('click', async ()=>{
+  try{
+    const {data}=await readData();
+    maxStars = data.stars||1;
+    setModalCount(1);
+    document.getElementById('modalSub').textContent=
+      `Federico has ${maxStars} star${maxStars===1?'':'s'} to spend.`;
+    document.getElementById('modalDesc').value='';
+    document.getElementById('redeemModal').classList.add('open');
+  }catch(e){ showError('Could not load: '+e.message); }
+});
+
+document.getElementById('minusBtn').addEventListener('click',()=>setModalCount(modalCount-1));
+document.getElementById('plusBtn').addEventListener('click',()=>setModalCount(modalCount+1));
+document.getElementById('cancelBtn').addEventListener('click',()=>{
+  document.getElementById('redeemModal').classList.remove('open');
+});
+
+document.getElementById('confirmBtn').addEventListener('click', async ()=>{
+  const cost = modalCount;
+  const desc = document.getElementById('modalDesc').value.trim() || 'Reward';
+  document.getElementById('confirmBtn').disabled=true;
+  document.getElementById('confirmBtn').textContent='Saving…';
+  try{
+    const {data,sha}=await readData();
+    if(data.stars < cost){ showError('Not enough stars!'); return; }
+    data.stars -= cost;
+    if(!data.redemptions) data.redemptions=[];
+    data.redemptions.push({ cost, desc, date: new Date().toISOString() });
+    await writeData(data, sha, `redeem ${cost} star(s): ${desc}`);
+    document.getElementById('redeemModal').classList.remove('open');
+    fetchAndRender();
+  }catch(e){
+    showError('Could not save: '+e.message);
+  } finally{
+    document.getElementById('confirmBtn').disabled=false;
+    document.getElementById('confirmBtn').textContent='Spend stars ⭐';
+  }
+});
+
+// ── settings ─────────────────────────────────────────────
+document.getElementById('cogBtn').addEventListener('click',()=>{
+  document.getElementById('inUser').value =cfg.user||'';
+  document.getElementById('inRepo').value =cfg.repo||'';
+  document.getElementById('inToken').value=cfg.token||'';
+  document.getElementById('inName').value =cfg.name||'Federico';
+  document.getElementById('panel').classList.add('open');
+});
+document.getElementById('panelClose').addEventListener('click',()=>{
+  document.getElementById('panel').classList.remove('open');
+});
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  cfg.user  =document.getElementById('inUser').value.trim();
+  cfg.repo  =document.getElementById('inRepo').value.trim();
+  cfg.token =document.getElementById('inToken').value.trim();
+  cfg.name  =document.getElementById('inName').value.trim()||'Federico';
+  saveCfg(cfg);
+  try{
+    const {data,sha}=await readData();
+    data.name=cfg.name;
+    await writeData(data,sha,'update config');
+  }catch(_){}
+  document.getElementById('panel').classList.remove('open');
+  fetchAndRender();
+});
+
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('Reset ALL stars to zero?')) return;
+  try{
+    const {data,sha}=await readData();
+    data.stars=0; data.lastAdded=null;
+    await writeData(data,sha,'reset stars');
+    document.getElementById('panel').classList.remove('open');
+    fetchAndRender();
+  }catch(e){ showError('Reset failed: '+e.message); }
+});
+
+document.getElementById('undoBtn').addEventListener('click', async ()=>{
+  try{
+    const {data,sha}=await readData();
+    if(data.stars>0) data.stars--;
+    await writeData(data,sha,'undo star');
+    document.getElementById('panel').classList.remove('open');
+    fetchAndRender();
+  }catch(e){ showError('Undo failed: '+e.message); }
+});
+
+document.getElementById('refreshBtn').addEventListener('click', fetchAndRender);
+
+// ── starfield canvas ─────────────────────────────────────
+(()=>{
+  const c=document.getElementById('canvas'),ctx=c.getContext('2d');
+  let W,H,st=[];
+  const resize=()=>{ W=c.width=innerWidth; H=c.height=innerHeight; init(); };
+  const init=()=>{ st=[]; for(let i=0;i<80;i++) st.push({
+    x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+0.3,
+    op:Math.random(),dop:(Math.random()*0.006+0.002)*(Math.random()<0.5?1:-1)
+  }); };
+  const draw=()=>{
+    ctx.clearRect(0,0,W,H);
+    st.forEach(s=>{ s.op+=s.dop; if(s.op>1||s.op<0)s.dop*=-1;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${s.op.toFixed(2)})`;ctx.fill(); });
+    requestAnimationFrame(draw);
+  };
+  window.addEventListener('resize',resize); resize(); draw();
+})();
+
+fetchAndRender();
+</script>
+</body>
+</html>
