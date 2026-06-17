@@ -1,6 +1,12 @@
 {
-  "stars": 1,
+  "stars": 0,
   "name": "Federico",
   "lastAdded": "2026-06-17T13:44:19.302Z",
-  "redemptions": []
+  "redemptions": [
+    {
+      "cost": 1,
+      "desc": "Test",
+      "date": "2026-06-17T13:45:39.659Z"
+    }
+  ]
 }
