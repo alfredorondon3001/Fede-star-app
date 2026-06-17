@@ -55,6 +55,36 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 .retry-btn{margin-top:0.75rem;padding:0.65rem 1.5rem;border-radius:999px;
   border:1px solid rgba(255,255,255,0.18);background:transparent;color:#fff;
   font-family:'Nunito',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer}
+.setup-btn{margin-top:0.5rem;padding:0.65rem 1.5rem;border-radius:999px;
+  border:none;background:var(--gold);color:var(--bg);
+  font-family:'Nunito',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer}
+
+/* tiny corner cog, always available */
+.cog{position:fixed;top:0.9rem;right:0.9rem;z-index:60;width:34px;height:34px;
+  border-radius:50%;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.35);
+  font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* settings panel (mirrors index.html) */
+#panel{display:none;position:fixed;inset:0;z-index:100;background:rgba(15,10,30,0.98);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;gap:0.9rem;overflow-y:auto}
+#panel.open{display:flex}
+.panel-title{font-size:1.3rem;font-weight:900;color:var(--gold);margin-bottom:0.25rem}
+.panel-lbl{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+  color:rgba(255,255,255,0.4);align-self:flex-start;width:100%;max-width:300px}
+.panel-input{width:100%;max-width:300px;padding:0.65rem 1rem;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);
+  color:#fff;font-family:'Nunito',sans-serif;font-size:0.95rem;font-weight:700}
+.panel-input:focus{outline:none;border-color:var(--gold)}
+.panel-save{width:100%;max-width:300px;padding:0.8rem;border-radius:999px;border:none;
+  background:var(--pink);color:#fff;font-family:'Nunito',sans-serif;
+  font-size:0.98rem;font-weight:900;cursor:pointer;margin-top:0.25rem}
+.panel-note{font-size:0.7rem;color:rgba(255,255,255,0.25);max-width:280px;
+  text-align:center;line-height:1.5}
+.panel-close{position:absolute;top:1rem;right:1rem;background:none;border:none;
+  color:rgba(255,255,255,0.3);font-size:1.3rem;cursor:pointer;padding:0.5rem}
+.panel-saved-msg{font-size:0.85rem;color:var(--teal);font-weight:700;display:none}
 
 @media(prefers-reduced-motion:reduce){
   .star-el.show,.ring{animation:none;opacity:1}
@@ -63,11 +93,29 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 </head>
 <body>
 <canvas id="canvas"></canvas>
+<button class="cog" id="cogBtn" aria-label="Settings">⚙️</button>
 
 <div class="wrap" id="wrap">
   <div class="spinner" id="spinner"></div>
   <div class="msg" id="msgEl"><span style="color:rgba(255,255,255,0.3)">Adding star…</span></div>
   <div class="sub" id="subEl"></div>
+</div>
+
+<!-- Settings panel: lets this exact browser context (Safari or standalone app) store its own token -->
+<div id="panel" role="dialog" aria-modal="true" aria-label="Settings">
+  <button class="panel-close" id="panelClose">✕</button>
+  <div class="panel-title">⚙️ Settings</div>
+  <div class="panel-lbl">GitHub username</div>
+  <input class="panel-input" id="inUser" placeholder="alfredorondon3001">
+  <div class="panel-lbl">Repository name</div>
+  <input class="panel-input" id="inRepo" placeholder="Fede-star-app">
+  <div class="panel-lbl">GitHub token (contents: read & write)</div>
+  <input class="panel-input" id="inToken" type="password" placeholder="github_pat_…">
+  <div class="panel-lbl">Child's name</div>
+  <input class="panel-input" id="inName" placeholder="Federico">
+  <button class="panel-save" id="saveBtn">Save</button>
+  <p class="panel-saved-msg" id="savedMsg">✓ Saved to this app</p>
+  <p class="panel-note">This saves the token only inside this exact app/browser context. If you use both Safari and a saved Home Screen icon, each needs its own setup.</p>
 </div>
 
 <script>
@@ -76,7 +124,38 @@ const DATA_FILE = 'data.json';
 const STATUS_PAGE = 'index.html';
 
 function loadCfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch{ return {}; } }
-const cfg = loadCfg();
+function saveCfg(c){ localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
+let cfg = loadCfg();
+
+// ── settings panel wiring ───────────────────────────────
+document.getElementById('cogBtn').addEventListener('click', ()=>{
+  document.getElementById('inUser').value =cfg.user||'';
+  document.getElementById('inRepo').value =cfg.repo||'';
+  document.getElementById('inToken').value=cfg.token||'';
+  document.getElementById('inName').value =cfg.name||'Federico';
+  document.getElementById('savedMsg').style.display='none';
+  document.getElementById('panel').classList.add('open');
+});
+document.getElementById('panelClose').addEventListener('click', ()=>{
+  document.getElementById('panel').classList.remove('open');
+});
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  cfg.user  = document.getElementById('inUser').value.trim();
+  cfg.repo  = document.getElementById('inRepo').value.trim();
+  cfg.token = document.getElementById('inToken').value.trim();
+  cfg.name  = document.getElementById('inName').value.trim()||'Federico';
+  saveCfg(cfg);
+  document.getElementById('savedMsg').style.display='block';
+  // restore the normal wrap UI and retry adding the star
+  document.getElementById('wrap').innerHTML = `
+    <div class="spinner" id="spinner"></div>
+    <div class="msg" id="msgEl"><span style="color:rgba(255,255,255,0.3)">Adding star…</span></div>
+    <div class="sub" id="subEl"></div>`;
+  setTimeout(()=>{
+    document.getElementById('panel').classList.remove('open');
+    addStar();
+  }, 600);
+});
 
 async function ghFetch(path, method='GET', body=null){
   const h={
@@ -128,7 +207,17 @@ function showError(msg){
 async function addStar(){
   if(!cfg.token||!cfg.user||!cfg.repo){
     document.getElementById('spinner').style.display='none';
-    showError('Not set up yet.<br>Open the status page and fill in ⚙️ first.');
+    document.getElementById('wrap').innerHTML=`
+      <div class="error-msg">😕 Not set up yet in this app.</div>
+      <button class="setup-btn" id="setupBtn">⚙️ Set up now</button>`;
+    document.getElementById('setupBtn').addEventListener('click', ()=>{
+      document.getElementById('inUser').value ='';
+      document.getElementById('inRepo').value ='';
+      document.getElementById('inToken').value='';
+      document.getElementById('inName').value ='Federico';
+      document.getElementById('savedMsg').style.display='none';
+      document.getElementById('panel').classList.add('open');
+    });
     return;
   }
 
